@@ -4,7 +4,7 @@ Diesen Text in die **Anweisungen** des claude.ai-Projekts einfügen. Die Ordner 
 
 **Aktueller Stand: Version 2.3 (10.10.2026)** – zusätzlich als Windows-App (portable .exe), gedrehte Seiten, großer Funktionstest.
 
-Download Windows-App: https://github.com/sikkkilaci/PDF-Editor/releases
+Download Windows-App: https://github.com/sikkkilaci/PDF-Editor/blob/main/Download/LAGZERO-PDF-Editor-2.3.0-portable.exe
 
 GitHub: https://github.com/sikkkilaci/PDF-Editor
 
@@ -29,7 +29,7 @@ Ein kostenloser, offline laufender PDF-Editor als einzelne HTML-Datei, als Alter
 
 ## Windows-App (neu in 2.3)
 - Ordner `05_Windows-App`: Electron 38, `main.js`, Bau mit electron-builder (`--win portable`), Symbol/Versionsinfo per `afterPack.js` (resedit, ohne Wine). Anleitung: `05_Windows-App/BAUEN.md`.
-- Ergebnis: `LAGZERO-PDF-Editor-<version>-portable.exe` (~85 MB, keine Installation). Liegt als GitHub-Release, nicht im Repo.
+- Ergebnis: `LAGZERO-PDF-Editor-<version>-portable.exe` (~85 MB, keine Installation). Liegt im Repo unter `Download/` (Releases kann Claude aus dieser Sitzung nicht anlegen; bei Bedarf selbst als Release hochladen).
 - Extras: PDF per Doppelklick/„Öffnen mit“/Ziehen auf die .exe, „Speichern unter“-Dialog, PC-Schriften ohne Nachfrage, Discord-Link im normalen Browser.
 - Nicht signiert → Windows SmartScreen zeigt beim ersten Start „Unbekannter Herausgeber“ (Weitere Informationen → Trotzdem ausführen). Ein Setup-Installer (NSIS) lässt sich nur unter Windows bauen.
 

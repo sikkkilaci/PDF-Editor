@@ -4,3 +4,4 @@ __pycache__/
 05_Windows-App/dist/
 05_Windows-App/app/
 *.exe
+!Download/*.exe

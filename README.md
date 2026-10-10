@@ -6,8 +6,8 @@ Kostenloser PDF-Editor als **eine einzige HTML-Datei**. Läuft komplett offline 
 
 ## Download & Start
 
-**Windows-App (empfohlen):** unter [Releases](https://github.com/sikkkilaci/PDF-Editor/releases/latest) die Datei
-`LAGZERO-PDF-Editor-…-portable.exe` laden und doppelklicken – keine Installation nötig.
+**Windows-App (empfohlen):** [`Download/LAGZERO-PDF-Editor-2.3.0-portable.exe`](Download/LAGZERO-PDF-Editor-2.3.0-portable.exe)
+öffnen → rechts „Download raw file“ (⤓) → doppelklicken. Keine Installation nötig.
 Beim ersten Start zeigt Windows evtl. „Unbekannter Herausgeber“ → *Weitere Informationen* → *Trotzdem ausführen*.
 
 **Ohne Installation im Browser:** [`01_Programm/LAGZERO-PDF-Editor.html`](01_Programm/LAGZERO-PDF-Editor.html)
