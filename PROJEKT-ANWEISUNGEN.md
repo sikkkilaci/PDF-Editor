@@ -2,7 +2,9 @@
 
 Diesen Text in die **Anweisungen** des claude.ai-Projekts einfügen. Die Ordner `02_Quellcode`, `03_Tests` und `04_Version-1` als **Projektwissen** hochladen. Die fertige Datei aus `01_Programm` ist rund 2,5 MB groß, weil alle Bibliotheken eingebaut sind; sie muss nicht ins Projektwissen.
 
-**Aktueller Stand: Version 2.2 (10.10.2026)** – Schriften-Treue stark verbessert, mit echten PDFs getestet.
+**Aktueller Stand: Version 2.3 (10.10.2026)** – zusätzlich als Windows-App (portable .exe), gedrehte Seiten, großer Funktionstest.
+
+Download Windows-App: https://github.com/sikkkilaci/PDF-Editor/releases
 
 GitHub: https://github.com/sikkkilaci/PDF-Editor
 
@@ -25,6 +27,12 @@ Ein kostenloser, offline laufender PDF-Editor als einzelne HTML-Datei, als Alter
 - Nach jedem Speichern Pop-up: „Dieses Programm wurde programmiert von Adem Tasdemir“, Kontakt über Discord, Button + QR-Code zu https://discord.gg/TjRhpfgu2c.
 - Downloads zusätzlich immer als ZIP; bei Dateisammlungen ein anklickbares HTML-Inhaltsverzeichnis.
 
+## Windows-App (neu in 2.3)
+- Ordner `05_Windows-App`: Electron 38, `main.js`, Bau mit electron-builder (`--win portable`), Symbol/Versionsinfo per `afterPack.js` (resedit, ohne Wine). Anleitung: `05_Windows-App/BAUEN.md`.
+- Ergebnis: `LAGZERO-PDF-Editor-<version>-portable.exe` (~85 MB, keine Installation). Liegt als GitHub-Release, nicht im Repo.
+- Extras: PDF per Doppelklick/„Öffnen mit“/Ziehen auf die .exe, „Speichern unter“-Dialog, PC-Schriften ohne Nachfrage, Discord-Link im normalen Browser.
+- Nicht signiert → Windows SmartScreen zeigt beim ersten Start „Unbekannter Herausgeber“ (Weitere Informationen → Trotzdem ausführen). Ein Setup-Installer (NSIS) lässt sich nur unter Windows bauen.
+
 ## Technik
 - pdf.js 3.11.174 (Anzeige, Textpositionen, Schriftdaten mit `fontExtraProperties`), pdf-lib 1.17.1 (Speichern), @pdf-lib/fontkit 1.1.1 (eingebettete PC-Schriften).
 - **Bauen:** im Ordner `02_Quellcode` einmalig `npm i pdfjs-dist@3.11.174 pdf-lib@1.17.1 @pdf-lib/fontkit@1.1.1`, dann `python build.py` → schreibt `01_Programm/LAGZERO-PDF-Editor.html`.
@@ -34,6 +42,9 @@ Ein kostenloser, offline laufender PDF-Editor als einzelne HTML-Datei, als Alter
 - **Eingebaute Schriften:** `02_Quellcode/schriften/` (Latin-Teilmenge, ohne Hinting, ~570 KB). `build.py` bettet sie als JSON/Base64 ein. Lizenzen: OFL 1.1 (Carlito, Caladea), Bitstream Vera/DejaVu (siehe `LIZENZ-*.txt`). Fertige HTML: ~3,2 MB.
 - Farben: aus einem zweiten Rendern ohne Anmerkungen per Farbhistogramm; Textfarbe = kräftigster Farbton mit genug Pixeln (nicht die grauen Kantenpixel).
 - Abdeckung: Rechteck in Hintergrundfarbe, dann neuer Text.
+- **Gedrehte Seiten (/Rotate 90/180/270, neu in 2.3):** Seite wird ungedreht bearbeitet und nur per CSS gedreht angezeigt; Klickfelder und neuer Text liegen dadurch immer richtig.
+- Neuer Text („Text hinzufügen“) ist schwarz, außer man hat vorher selbst eine Farbe gewählt (vorher wurde z. B. Weiß der letzten Zeile übernommen → unsichtbar).
+- Fett/Kursiv bei Standardschriften (Helvetica/Arial/Times/Courier) gilt nicht mehr als „Ersatzschrift“.
 - Verschlüsselte PDFs: Speichern wird mit Hinweis abgebrochen (sonst kaputte Datei). Workaround: in Chrome drucken → „Als PDF speichern“.
 
 ## Getestet
@@ -47,10 +58,12 @@ Ein kostenloser, offline laufender PDF-Editor als einzelne HTML-Datei, als Alter
 - Word-PDF mit Calibri-Teilschrift (ComCave-Anleitung): Absatz in Original-Calibri. Fehlen Zeichen in der Teilschrift (z. B. „U“, „c“ in Calibri Bold), wird korrekt gewarnt.
 - Telekom-PDF, 58 Seiten, CID-Schriften: lädt in ca. 4 s; Tabellenkopf, Aufzählung, Preistabelle bearbeitet. Fehler „Spalten verschmolzen + Tabellenlinie gelöscht“, „graue statt schwarze Schrift“, „Aufzählungen als ein Absatz“ gefunden und behoben.
 - Alle alten Tests danach erneut grün.
+- **V2.3 Funktionstest** (`03_Tests/e2e6_suite.sh`, 11 Test-PDFs in `03_Tests/testpdfs`): Querformat mit Farben/kursiv/weiß auf grün, zweispaltig, gedreht 90/180/270, verschobene CropBox, Formular (Feld bleibt), Scan (nur Text hinzufügen), Chrome-PDF (Liberation/DejaVu, Tabelle, Aufzählung, Textmarker), LibreOffice/Word-artig (Carlito/Caladea), 40 Seiten (ca. 8 s). Geprüft: Zeile, Absatz, Hinzufügen, Fett, Kursiv, Größe, Farbe, Rückgängig, Speichern, Pop-up. Gefunden und behoben: unsichtbarer neuer Text, gedrehte Seiten, falsche Ersatzschrift-Warnung. Alle Ergebnisse als Bild geprüft.
+- **Windows-App** mit derselben Programmlogik unter Electron getestet (`05_Windows-App/apptest.js`): Öffnen per Startparameter, Bearbeiten, Speichern, Pop-up, Discord-Link, PC-Schriften (310 gefunden). Die .exe selbst konnte nicht unter Windows gestartet werden.
 - V2.2: Bank-PDF (Volksbank, Schriften GenosGFG + DejaVu Sans Mono, Teilschriften ohne Q/X/j/x/y): vorher ganze Zeile Helvetica (sofort sichtbar), jetzt Brieftext in echter DejaVu Sans Mono und GenosGFG gemischt (nur fehlende Buchstaben in Helvetica). Calibri-Teilschrift → Carlito, optisch gleich. Test nur an einer entschlüsselten Kopie im Testsystem.
 
 ## Offen / noch nicht getestet
-1. **Automatische PC-Schriftsuche (Local Font Access)** – wird seit V2.2 automatisch angefragt; nur in echtem Chrome/Edge mit Fenster testbar.
+1. **Windows-.exe auf echtem Windows starten** (SmartScreen-Hinweis, Doppelklick auf PDF). Im Browser: PC-Schriftsuche wird automatisch angefragt (in der App ohne Nachfrage).
 2. Firmen-Hausschriften (z. B. GenosGFG, TeleGrotesk): fehlende Buchstaben kommen aus Helvetica – fällt kaum auf, ist aber nicht 100 % gleich. Lösung nur mit der echten Schriftdatei.
 3. Bearbeitungsgeschützte (verschlüsselte) PDFs, z. B. von Banken: Speichern wird bewusst abgelehnt.
 4. Absatz-Vorschau kann minimal anders umbrechen als das gespeicherte PDF.
@@ -61,6 +74,6 @@ Ein kostenloser, offline laufender PDF-Editor als einzelne HTML-Datei, als Alter
 9. pdf.js meldet „fake worker“ bei file:// – funktioniert, ist aber langsamer bei großen PDFs.
 
 ## Arbeitsweise für dieses Projekt
-- Änderungen immer in `editor-quelle.html`, dann mit `build.py` bauen.
-- Vor jeder Ausgabe: Code-Review + Tests aus `03_Tests` (auch `e2e5_echte_pdfs.py` mit echten PDFs) laufen lassen und das gespeicherte PDF als Bild prüfen.
+- Änderungen immer in `editor-quelle.html`, dann mit `build.py` bauen; für die App die neue HTML nach `05_Windows-App/app/editor.html` kopieren und neu bauen.
+- Vor jeder Ausgabe: Code-Review + Tests aus `03_Tests` (`e2e6_suite.sh` für alle Funktionen, `e2e5_echte_pdfs.py` mit echten PDFs) laufen lassen und das gespeicherte PDF als Bild prüfen.
 - Ehrlich sagen, was getestet ist und was nicht.

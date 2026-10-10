@@ -1,0 +1,61 @@
+{
+  "name": "lagzero-pdf-editor",
+  "version": "2.3.0",
+  "description": "LAGZERO PDF Editor – Text in PDFs ändern, offline",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win portable nsis --x64"
+  },
+  "keywords": [],
+  "author": "Adem Tasdemir",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "electron": "^38.8.6",
+    "electron-builder": "^26.15.3",
+    "playwright-core": "^1.64.0",
+    "resedit": "^3.1.0"
+  },
+  "productName": "LAGZERO PDF Editor",
+  "build": {
+    "appId": "de.lagzero.pdfeditor",
+    "productName": "LAGZERO PDF Editor",
+    "copyright": "© 2026 Adem Tasdemir",
+    "files": [
+      "main.js",
+      "app/**",
+      "build/icon.png"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "icon": "build/icon.ico",
+      "signAndEditExecutable": false,
+      "fileAssociations": [
+        {
+          "ext": "pdf",
+          "name": "PDF-Dokument",
+          "description": "PDF mit LAGZERO bearbeiten",
+          "role": "Editor"
+        }
+      ]
+    },
+    "portable": {
+      "artifactName": "LAGZERO-PDF-Editor-${version}-portable.exe"
+    },
+    "nsis": {
+      "artifactName": "LAGZERO-PDF-Editor-${version}-Setup.exe",
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "LAGZERO PDF Editor",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "language": "1031"
+    },
+    "afterPack": "./afterPack.js"
+  }
+}

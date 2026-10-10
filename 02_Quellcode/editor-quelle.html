@@ -61,6 +61,7 @@ main{padding:28px 16px 40px;display:flex;flex-direction:column;align-items:cente
 .page{position:relative;background:#fff;box-shadow:0 10px 36px rgba(0,0,0,.55);outline:1px solid #1b1f25}
 .page canvas{display:block}
 .layer{position:absolute;inset:0}
+.pin{position:absolute;left:0;top:0;transform-origin:0 0}
 .pno{position:absolute;top:-20px;left:0;font-size:11px;letter-spacing:.12em;color:var(--muted)}
 .ln{position:absolute;white-space:pre;color:transparent;cursor:text;border-radius:2px}
 body.m-line .ln:hover{outline:1px dashed var(--accent);background:rgba(227,27,35,.07)}
@@ -485,7 +486,8 @@ async function resolveFont(e, text){
       }
     }
   }
-  return {kind:'std', css:cssStd(stdKindOf(e)), label:stdLabel(e), note: info ? 'Ersatzschrift' : 'Standardschrift', warn:!!info};
+  const sameFam = info && !info.data && /^(helvetica|arial|times|timesnewroman|courier|couriernew)$/.test(familyKey(info.base));
+  return {kind:'std', css:cssStd(stdKindOf(e)), label:stdLabel(e), note: sameFam ? 'gleiche Schriftfamilie' : info ? 'Ersatzschrift' : 'Standardschrift', warn:!!info && !sameFam};
 }
 const stdKindOf = e => e.info ? e.info.kind : (e.kind || 'sans');
 const cssStd = k => k==='serif' ? '"Times New Roman",Times,serif' : k==='mono' ? '"Courier New",Courier,monospace' : 'Helvetica,Arial,sans-serif';
@@ -551,19 +553,28 @@ async function load(file){
 
 async function renderPage(pdf, num, avail){
   const page = await pdf.getPage(num);
-  const base = page.getViewport({scale:1});
-  const scale = Math.min(2, avail / base.width);
-  const vp = page.getViewport({scale});
+  // Gedrehte Seiten (/Rotate) werden ungedreht bearbeitet und nur per CSS gedreht angezeigt:
+  // so liegen Text, Klickfelder und neuer Text immer in derselben Richtung wie die Seite.
+  const rot = ((page.rotate || 0) % 360 + 360) % 360;
+  const base = page.getViewport({scale:1, rotation:0});
+  const visW = rot % 180 ? base.height : base.width;
+  const scale = Math.min(2, avail / visW);
+  const vp = page.getViewport({scale, rotation:0});
   const dpr = window.devicePixelRatio || 1;
 
   const wrap = document.createElement('div'); wrap.className = 'page';
-  wrap.style.width = vp.width + 'px'; wrap.style.height = vp.height + 'px';
-  const no = document.createElement('div'); no.className = 'pno'; no.textContent = 'SEITE ' + num;
+  const W = vp.width, H = vp.height;
+  wrap.style.width = (rot % 180 ? H : W) + 'px'; wrap.style.height = (rot % 180 ? W : H) + 'px';
+  const pin = document.createElement('div'); pin.className = 'pin';
+  pin.style.width = W + 'px'; pin.style.height = H + 'px';
+  if (rot) pin.style.transform = ({90:'translate('+H+'px,0) rotate(90deg)', 180:'translate('+W+'px,'+H+'px) rotate(180deg)',
+    270:'translate(0,'+W+'px) rotate(270deg)'})[rot] || '';
+  const no = document.createElement('div'); no.className = 'pno'; no.textContent = 'SEITE ' + num + (rot ? ' · GEDREHT ' + rot + '°' : '');
   const cv = document.createElement('canvas');
-  cv.width = Math.floor(vp.width*dpr); cv.height = Math.floor(vp.height*dpr);
-  cv.style.width = vp.width + 'px'; cv.style.height = vp.height + 'px';
+  cv.width = Math.floor(W*dpr); cv.height = Math.floor(H*dpr);
+  cv.style.width = W + 'px'; cv.style.height = H + 'px';
   const layer = document.createElement('div'); layer.className = 'layer';
-  wrap.append(no, cv, layer); main.appendChild(wrap);
+  pin.append(cv, layer); wrap.append(no, pin); main.appendChild(wrap);
 
   await page.render({canvasContext:cv.getContext('2d'), viewport:vp, transform: dpr!==1 ? [dpr,0,0,dpr,0,0] : null}).promise;
   // zweites Rendern ohne Anmerkungen: daraus werden Text- und Hintergrundfarbe gelesen
@@ -596,13 +607,12 @@ async function renderPage(pdf, num, avail){
 
   layer.addEventListener('click', ev => {
     if (S.mode !== 'add' || ev.target !== layer) return;
-    const r = layer.getBoundingClientRect();
     const size = parseFloat($('fSize').value) || 11;
-    const [x, y] = vp.convertToPdfPoint(ev.clientX - r.left, ev.clientY - r.top + size*scale*0.8);
+    const [x, y] = vp.convertToPdfPoint(ev.offsetX, ev.offsetY + size*scale*0.8);
     const info = S.lastInfo;
     const e = {type:'add', page:ctx.page, x, y, w:0, size, lead:size*1.2, info,
       bold: info ? info.bold : $('fBold').classList.contains('on'), italic: info ? info.italic : $('fItal').classList.contains('on'),
-      color:$('fColor').value, bg:null, orig:'', hide:[], ctx};
+      color:S.userColor || '#000000', bg:null, orig:'', hide:[], ctx};
     makeEditor(e, '');
   });
 }
@@ -777,7 +787,7 @@ function select(e){
 }
 $('fSize').addEventListener('input', () => { const e = S.active; if (!e) return;
   const v = parseFloat($('fSize').value); if (!v) return; if (e.type==='para') e.lead = e.lead * v / e.size; e.size = v; place(e); });
-$('fColor').addEventListener('input', () => { if (S.active){ S.active.color = $('fColor').value; place(S.active); }});
+$('fColor').addEventListener('input', () => { S.userColor = $('fColor').value; if (S.active){ S.active.color = $('fColor').value; place(S.active); }});
 for (const [id, key] of [['fBold','bold'],['fItal','italic']]){
   $(id).addEventListener('mousedown', ev => ev.preventDefault());
   $(id).addEventListener('click', () => { $(id).classList.toggle('on'); if (S.active){ S.active[key] = $(id).classList.contains('on'); updateFont(S.active); }});
@@ -900,7 +910,7 @@ $('save').addEventListener('click', async () => {
       }
       if (!writer){
         writer = plainWriter(await embedOf({kind:'std'}));
-        if (info) warnings.push('„' + text.slice(0, 40) + (text.length>40?'…':'') + '“: Ersatzschrift ' + stdLabel(e) + ' statt ' + info.base);
+        if (info && r.warn) warnings.push('„' + text.slice(0, 40) + (text.length>40?'…':'') + '“: Ersatzschrift ' + stdLabel(e) + ' statt ' + info.base);
       }
       if (e.type === 'para'){
         const lines = wrapText(writer.width, text, e.w + 0.5);
@@ -927,7 +937,7 @@ $('save').addEventListener('click', async () => {
 });
 
 function showModal(name, warnings){
-  $('mFile').textContent = 'Datei: ' + name + ' (im Download-Ordner)';
+  $('mFile').textContent = 'Datei: ' + name + (/Electron/.test(navigator.userAgent) ? '' : ' (im Download-Ordner)');
   const ul = $('mWarn'); ul.innerHTML = '';
   warnings.slice(0, 6).forEach(w => { const li = document.createElement('li'); li.textContent = w; ul.appendChild(li); });
   ul.hidden = !warnings.length;
@@ -938,6 +948,11 @@ $('mClose').addEventListener('click', () => { $('modal').hidden = true; });
 $('modal').addEventListener('click', ev => { if (ev.target === $('modal')) $('modal').hidden = true; });
 document.addEventListener('keydown', ev => { if (ev.key === 'Escape') $('modal').hidden = true; });
 window.__lz = S;
+// Anschluss für die Windows-App: PDF per „Öffnen mit“ / Doppelklick laden
+window.__lzOpenBytes = (name, b64) => {
+  const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  load(new File([bytes], name, {type:'application/pdf'}));
+};
 })();
 </script>
 </body>

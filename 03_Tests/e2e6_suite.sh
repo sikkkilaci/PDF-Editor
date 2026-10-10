@@ -1,0 +1,12 @@
+cd "$(dirname "$0")/testpdfs"
+R="python3 ../e2e6_alle_funktionen.py"
+echo "### quer"; $R quer.pdf o_quer.pdf '[["line","Quartalsbericht","Jahresbericht Querformat 2026"],["line","Blauer kursiver","Blauer kursiver Untertitel geändert"],["para","Zeile 1:","Neuer Absatz im Querformat. Er ersetzt sechs Zeilen und wird sauber umbrochen, damit alles in die Breite passt."],["line","Weisser Text","Weiß auf Grün bleibt"],["add",0,0.6,0.9,"Neu hinzugefügt unten"]]'
+echo "### spalten"; $R spalten.pdf o_spalten.pdf '[["line","Links Spalte Zeile 3","Links geändert Zeile 3"],["line","Rechts Spalte Zeile 5","Rechts geändert Zeile 5"],["para","Rechts Spalte Zeile 8","Rechter Absatz komplett neu geschrieben über mehrere Zeilen hinweg."]]'
+echo "### gedreht"; $R gedreht.pdf o_gedreht.pdf '[["line","Zweite Zeile","Zweite Zeile wurde geändert"],["add",0,0.5,0.5,"Hinzu"]]'
+echo "### cropbox"; $R cropbox.pdf o_cropbox.pdf '[["line","Zweite Zeile","Zweite Zeile CropBox geändert"],["add",0,0.3,0.8,"Hinzu Crop"]]'
+echo "### formular"; $R formular.pdf o_formular.pdf '[["line","Hinweis","Hinweis: Bitte alles ausfüllen!"]]'
+echo "### scan"; $R scan.pdf o_scan.pdf '[["add",0,0.2,0.2,"Text auf einem Scan"]]'
+echo "### chrome"; $R chrome.pdf o_chrome.pdf '[["line","Rechnung Nr","Rechnung Nr. 4712"],["line","Beratung","Beratung"],["line","270,00","310,00 €"],["para","hiermit stellen","hiermit stellen wir Ihnen die folgenden Leistungen in Rechnung. Bitte zahlen Sie zeitnah."],["line","Erster Aufz","Erster Punkt geändert"],["line","kursiv","Fett und kursiv – geändert, Qualität!"]]'
+echo "### lo (Word-artig)"; $R lo.pdf o_lo.pdf '[["line","Bescheinigung","Teilnahmebescheinigung"],["para","Hiermit wird","Hiermit wird bestätigt, dass Frau Beispiel an der Weiterbildung teilgenommen hat. Sie umfasste 80 Stunden."],["line","Wichtiger Hinweis","Sehr wichtiger Hinweis"],["line","Punkt zwei","Punkt zwei (geändert)"],["line","01.10.2026","15.10.2026"],["line","Würzburg","Zellingen"]]'
+echo "### gross (40 S.)"; time $R gross.pdf o_gross.pdf '[["line","Seite 1 Zeile 3:","Seite 1 Zeile 3 geändert"],["line","Seite 40 Zeile 45","Seite 40 letzte Zeile geändert"]]'
+echo "### stil/undo"; $R quer.pdf o_stil.pdf '[["line","Zeile 2:","Zeile 2 jetzt fett und rot"],["bold"],["color","#d00000"],["line","Zeile 4:","Zeile 4 größer und kursiv"],["ital"],["size",16],["line","Zeile 6:","Wird rückgängig gemacht"],["undo"]]' stil.png
