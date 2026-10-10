@@ -1,0 +1,31 @@
+from playwright.sync_api import sync_playwright
+import json
+with sync_playwright() as p:
+    b=p.chromium.launch(); pg=b.new_page(viewport={'width':1300,'height':1000}, accept_downloads=True)
+    logs=[]; pg.on('console',lambda m:logs.append(m.type+': '+m.text)); pg.on('pageerror',lambda e:logs.append('PAGEERR '+str(e)))
+    pg.goto('file:///home/claude/LAGZERO-PDF-Editor.html')
+    pg.screenshot(path='s0.png')
+    pg.set_input_files('#file','test.pdf')
+    pg.wait_for_selector('.ln'); pg.wait_for_timeout(800)
+    info=pg.evaluate("""()=>Object.values(__lz.fonts).map(f=>({raw:f.raw,bold:f.bold,data:!!f.data,fk:!!f.fk,kind:f.kind}))""")
+    print(json.dumps(info,indent=0))
+    lines=pg.evaluate("""()=>[...document.querySelectorAll('.ln')].map(e=>[e.textContent,e.classList.contains('inpara')])""")
+    print(lines)
+    def edit(text_contains, newtext, mode='#mLine'):
+        pg.click(mode)
+        el=pg.locator('.ln',has_text=text_contains).first; el.click()
+        pg.keyboard.press('Control+A'); pg.keyboard.type(newtext); pg.wait_for_timeout(300)
+        print('CHIP:',pg.inner_text('#fontChip'))
+    edit('Max Müller','Kunde: Max Müller, Würzburg 97070')   # chars in subset? digits partly
+    edit('Rechnung','Rechnung Nr. 2026-0174')
+    edit('Betrag','Betrag: 312,50 EUR (markiert)')
+    edit('Zahlbar','Zahlbar bis 13.12.2026')
+    edit('Absatz in einer','Dies ist ein geänderter Absatz. Er wurde komplett neu geschrieben und soll sauber innerhalb der ursprünglichen Breite umbrochen werden.', '#mPara')
+    edit('Helvetica','Standardschrift Helvetica geändert: äöü ß')
+    pg.screenshot(path='s1.png', full_page=False)
+    with pg.expect_download() as d: pg.click('#save')
+    d.value.save_as('out.pdf'); pg.wait_for_timeout(400)
+    pg.screenshot(path='s2.png')
+    print('STATUS', pg.inner_text('#status')); print('WARN', pg.inner_text('#mWarn'))
+    print('\n'.join(logs[-15:]))
+    b.close()

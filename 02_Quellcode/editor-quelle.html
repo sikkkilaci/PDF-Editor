@@ -1,0 +1,944 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="author" content="LAG|ZERØ · Adem Tasdemir">
+<title>LAG|ZERØ PDF Editor</title>
+<style>
+/* LAG|ZERØ-Design: schwarz / silber / rot. Fester Kopf mit Werkzeugleiste, darunter die PDF-Seiten */
+:root{--bg:#050609;--card:#0b0d11;--text:#f0f2f4;--muted:#939ba4;--accent:#e31b23;--accent-hi:#ff3a42;
+  --border:#2d3239;--silver:#c9ced4;--ok:#3ccf7a;--warn:#f0b43c;--ui:"Segoe UI",Arial,sans-serif}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;min-height:100%}
+body{font:14px/1.45 var(--ui);color:var(--text);background-color:#050609;
+  background:radial-gradient(circle at 80% 0%,rgba(227,27,35,.10),transparent 28%),radial-gradient(circle at 10% 20%,rgba(255,255,255,.035),transparent 26%),linear-gradient(135deg,#030406,#090b0e 45%,#07090c);
+  background-attachment:fixed}
+a{color:#ff6b70}
+header{position:sticky;top:0;z-index:30;background:rgba(5,6,9,.96);border-bottom:1px solid var(--border);padding:18px 4vw 12px}
+.brand{display:flex;flex-wrap:wrap;gap:10px 24px;align-items:flex-end;justify-content:space-between}
+.lz-eyebrow{color:var(--accent-hi);font-size:10px;font-weight:900;letter-spacing:.16em;margin-bottom:4px}
+h1{margin:0;font-size:24px;letter-spacing:.01em}
+h1 b{color:var(--accent)}
+.sub{margin:2px 0 0;color:var(--muted);font-size:13px}
+.logo{text-align:right}
+.logo .mark{font-weight:900;font-size:20px;letter-spacing:.06em;color:var(--silver)}
+.logo .mark span{color:var(--accent)}
+.logo .mark .ver{font-size:9px;letter-spacing:.2em;color:#fff;background:var(--accent);padding:1px 6px;border-radius:3px;margin-left:6px;vertical-align:middle}
+.logo .slogan{font-size:10px;letter-spacing:.22em;color:var(--muted);margin-top:3px}
+.tools{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin-top:12px}
+.grp{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.sep{width:1px;height:24px;background:var(--border)}
+button,.btn{font:inherit;font-size:13px;background:#0c1219;border:1px solid var(--border);color:var(--text);
+  padding:7px 11px;border-radius:8px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+button:hover,.btn:hover{border-color:#61232a}
+button:focus-visible,.btn:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.on{background:#190b0d;border-color:var(--accent);color:#f3c0c3;font-weight:700}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+button.primary:hover{background:var(--accent-hi)}
+button:disabled{opacity:.4;cursor:default}
+.btn.discord{background:#5865f2;border-color:#5865f2;color:#fff;font-weight:700}
+.small{font-size:12px;color:var(--muted);display:flex;gap:5px;align-items:center}
+input[type=number]{width:62px;font:inherit;padding:5px 6px;border-radius:7px;border:1px solid var(--border);background:#0c1219;color:var(--text)}
+input[type=color]{width:34px;height:30px;padding:0;border:1px solid var(--border);border-radius:7px;background:#0c1219}
+input[type=file]{display:none}
+.fontbar{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:12px;color:var(--muted);min-height:24px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:99px;border:1px solid var(--border);background:#0b0d11;color:var(--silver)}
+.chip.ok{border-color:#1f5a38;color:#9ee8bd}
+.chip.warn{border-color:#6b4f1a;color:#f6d38c}
+.chip i{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}
+#status{margin-left:auto;color:var(--muted)}
+main{padding:28px 16px 40px;display:flex;flex-direction:column;align-items:center;gap:28px}
+.drop{width:min(640px,100%);margin-top:30px;background:linear-gradient(180deg,rgba(13,16,21,.98),rgba(9,11,15,.98));
+  border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:13px;padding:30px 28px;box-shadow:0 8px 32px rgba(0,0,0,.22)}
+.drop.hover{border-color:var(--accent)}
+.drop h2{margin:0 0 6px;font-size:20px}
+.drop p{color:var(--muted);margin:6px 0}
+.drop ol{margin:16px 0 0;padding-left:20px;color:#d5dde6}
+.drop li{margin:5px 0}
+.drop .note{font-size:12px;color:#8fa0b1;margin-top:14px}
+.page{position:relative;background:#fff;box-shadow:0 10px 36px rgba(0,0,0,.55);outline:1px solid #1b1f25}
+.page canvas{display:block}
+.layer{position:absolute;inset:0}
+.pno{position:absolute;top:-20px;left:0;font-size:11px;letter-spacing:.12em;color:var(--muted)}
+.ln{position:absolute;white-space:pre;color:transparent;cursor:text;border-radius:2px}
+body.m-line .ln:hover{outline:1px dashed var(--accent);background:rgba(227,27,35,.07)}
+body.m-para .ln.inpara:hover,body.m-para .ln.hl{outline:1px dashed #5865f2;background:rgba(88,101,242,.08)}
+body.m-add .ln{pointer-events:none}
+body.m-add .layer{cursor:crosshair}
+.ed{position:absolute;white-space:pre;color:#000;outline:1px solid var(--accent);cursor:text;z-index:2;min-width:6px}
+.ed.para{white-space:pre-wrap;overflow-wrap:break-word}
+.ed:focus{outline:2px solid var(--accent)}
+.ed.over{outline-color:var(--warn)}
+.clean .ed{outline:none!important}
+.hint{font-size:12px;color:var(--muted);max-width:760px;text-align:center}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:grid;place-items:center;z-index:50;padding:16px}
+.box{width:min(460px,100%);background:linear-gradient(180deg,#0d1015,#090b0f);border:1px solid var(--border);border-top:3px solid var(--accent);
+  border-radius:14px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.box h3{margin:2px 0 4px;font-size:19px}
+.box p{margin:6px 0;color:#d5dde6}
+.box .file{color:var(--muted);font-size:12px;word-break:break-all}
+.credit{margin:16px 0;padding:14px;border:1px solid var(--border);border-radius:10px;background:#0b0d11;display:flex;gap:14px;align-items:center}
+.credit .qr{width:92px;height:92px;flex:none;background:#fff;border-radius:6px;padding:4px}
+.credit .qr svg{width:100%;height:100%;display:block}
+.credit b{color:var(--text)}
+.credit .link{font-size:12px;color:var(--muted);user-select:all;word-break:break-all}
+.actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.warnlist{font-size:12px;color:#f6d38c;margin:8px 0 0;padding-left:18px}
+.lz-copyright{text-align:center;padding:18px 16px 28px;font-size:11px;letter-spacing:.03em;color:#9aabba}
+@media(max-width:700px){.logo{text-align:left}#status{margin-left:0;width:100%}.sep{display:none}}
+</style>
+</head>
+<body class="m-line">
+<header>
+  <div class="brand">
+    <div>
+      <div class="lz-eyebrow">ʟᴀɢᴢᴇʀᴏ // PDF EDITOR</div>
+      <h1>PDF <b>Textbearbeiter</b></h1>
+      <p class="sub">Texte direkt im PDF ändern. Schrift, Größe, Farbe und Position bleiben erhalten.</p>
+    </div>
+    <div class="logo">
+      <div class="mark">LAG<span>|</span>ZERØ<span class="ver">VERIFIED</span></div>
+      <div class="slogan">TESTED. MEASURED. OPTIMIZED.</div>
+    </div>
+  </div>
+  <div class="tools">
+    <div class="grp">
+      <label class="btn" for="file">PDF öffnen</label>
+      <input type="file" id="file" accept="application/pdf,.pdf">
+    </div>
+    <span class="sep"></span>
+    <div class="grp" role="group" aria-label="Modus">
+      <button id="mLine" class="on" title="Eine einzelne Zeile ändern">Zeile</button>
+      <button id="mPara" title="Einen ganzen Absatz ändern, der Text wird neu umbrochen">Absatz</button>
+      <button id="mAdd" title="Irgendwo klicken und neuen Text setzen">Text hinzufügen</button>
+    </div>
+    <span class="sep"></span>
+    <div class="grp">
+      <label class="small">Größe <input type="number" id="fSize" min="3" max="120" step="0.5" value="11"></label>
+      <label class="small">Farbe <input type="color" id="fColor" value="#000000"></label>
+      <button id="fBold" title="Fett"><b>F</b></button>
+      <button id="fItal" title="Kursiv"><i>K</i></button>
+    </div>
+    <span class="sep"></span>
+    <div class="grp">
+      <button id="undo" disabled>Rückgängig</button>
+      <button id="clean" title="Bearbeitungsrahmen ausblenden">Vorschau</button>
+      <button id="save" class="primary" disabled>PDF speichern</button>
+    </div>
+  </div>
+  <div class="fontbar">
+    <button id="lfa" title="Erlaubt dem Editor, die auf diesem PC installierten Schriften zu nutzen">Schriften vom PC freigeben</button>
+    <label class="btn" for="fontFile" id="fontFileBtn" hidden>Schriftdatei wählen …</label>
+    <input type="file" id="fontFile" accept=".ttf,.otf,font/ttf,font/otf">
+    <span id="fontChip" class="chip" hidden></span>
+    <span id="status">Keine Datei geladen</span>
+  </div>
+</header>
+
+<main id="main">
+  <section class="drop" id="drop">
+    <div class="lz-eyebrow">SO FUNKTIONIERT ES</div>
+    <h2>PDF hierher ziehen oder „PDF öffnen“ klicken</h2>
+    <p>Die Datei bleibt auf diesem Computer. Nichts wird hochgeladen, auch Internet ist nicht nötig.</p>
+    <ol>
+      <li><b>Zeile:</b> Textzeile anklicken und ändern.</li>
+      <li><b>Absatz:</b> Absatz anklicken und als Ganzes umschreiben. Der Text wird beim Speichern passend zur Absatzbreite umbrochen.</li>
+      <li><b>Text hinzufügen:</b> an eine freie Stelle klicken und schreiben.</li>
+      <li><b>PDF speichern:</b> die bearbeitete Kopie landet im Download-Ordner. Das Original bleibt unverändert.</li>
+    </ol>
+    <p class="note">Tipp: In Chrome oder Edge einmal „Schriften vom PC freigeben“ klicken. Dann findet der Editor fehlende Buchstaben automatisch in den installierten Schriften.</p>
+  </section>
+</main>
+
+<div class="modal" id="modal" hidden>
+  <div class="box" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <div class="lz-eyebrow">ʟᴀɢᴢᴇʀᴏ // PDF EDITOR</div>
+    <h3 id="mTitle">PDF gespeichert</h3>
+    <p class="file" id="mFile"></p>
+    <ul class="warnlist" id="mWarn" hidden></ul>
+    <div class="credit">
+      <div class="qr" aria-label="QR-Code zum LAG|ZERØ Discord">/*QRSVG*/</div>
+      <div>
+        <p>Dieses Programm wurde programmiert von <b>Adem Tasdemir</b>.</p>
+        <p style="margin-top:8px">Kontakt über den LAG|ZERØ Discord:</p>
+        <div class="link">https://discord.gg/TjRhpfgu2c</div>
+      </div>
+    </div>
+    <div class="actions">
+      <a class="btn discord" href="https://discord.gg/TjRhpfgu2c" target="_blank" rel="noopener">Zum Discord</a>
+      <button id="mClose">Schließen</button>
+    </div>
+  </div>
+</div>
+
+<div class="lz-copyright">© 2026 LAG|ZERØ · Programmiert von Adem Tasdemir · <a href="https://discord.gg/TjRhpfgu2c" target="_blank" rel="noopener">Discord</a></div>
+
+<script>/*PDFJS*/</script>
+<script>/*PDFLIB*/</script>
+<script>/*FONTKIT*/</script>
+<script type="text/plain" id="wsrc">/*WORKER*/</script>
+<script type="application/json" id="bfonts">/*BUNDLE*/</script>
+<script>
+(function(){
+'use strict';
+pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(
+  new Blob([document.getElementById('wsrc').textContent], {type:'text/javascript'}));
+
+const $ = id => document.getElementById(id);
+const main = $('main');
+const S = {bytes:null, name:'dokument.pdf', mode:'line', edits:[], active:null, lastInfo:null,
+           fonts:{}, local:null, manual:{}};
+
+const status = t => { $('status').textContent = t; };
+const refresh = () => { $('undo').disabled = !S.edits.length; $('save').disabled = !S.bytes; };
+
+// ============ Schrift-Hilfen ============
+const norm = s => (s||'').toLowerCase().replace(/^[a-z]{6}\+/,'').replace(/[^a-z0-9]/g,'');
+const baseName = n => (n||'').replace(/^[A-Z]{6}\+/,'');
+function styleOf(name){
+  const n = (name||'').toLowerCase();
+  return { bold:/bold|black|heavy|semibold|demibold|demi\b|,bd|-bd/.test(n), italic:/italic|oblique|,it|-it\b/.test(n) };
+}
+function familyKey(name){
+  return norm(baseName(name).split(/[-,]/)[0].replace(/(PS)?MT$/,'').replace(/PS$/,''));
+}
+function stdKind(name){
+  const n = norm(name);
+  if (/times|serif|roman|garamond|georgia|cambria|minion|book/.test(n) && !/sans/.test(n)) return 'serif';
+  if (/courier|mono|consol/.test(n)) return 'mono';
+  return 'sans';
+}
+function covers(fk, text){
+  if (!fk) return false;
+  for (const ch of text){ const cp = ch.codePointAt(0); if (cp < 32) continue; try { if (!fk.hasGlyphForCodePoint(cp)) return false; } catch(_) { return false; } }
+  return true;
+}
+function fkCreate(bytes){
+  try { const f = fontkit.create(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes)); return f && f.fonts ? null : f; }
+  catch(_) { return null; }
+}
+
+function fontInfo(page, fontName, styles){
+  if (S.fonts[fontName]) return S.fonts[fontName];
+  let f = null; try { f = page.commonObjs.get(fontName); } catch(_) {}
+  const raw = (f && f.name) || (styles[fontName] && styles[fontName].fontFamily) || 'Unbekannt';
+  const st = styleOf(raw);
+  const info = { id:fontName, raw, base:baseName(raw),
+    bold: st.bold || !!(f && (f.bold || f.black)), italic: st.italic || !!(f && f.italic),
+    data: (f && f.data && !f.isType3Font) ? f.data : null, fk:null, kind:stdKind(raw),
+    serif: !!(f && f.isSerifFont), composite: !!(f && f.composite), type3: !!(f && f.isType3Font),
+    widths: (f && f.widths) || {}, dw: (f && f.defaultWidth) || 0, toFontChar: (f && f.toFontChar) || null, inv: new Map(), patchW: new Map() };
+  if (info.serif && info.kind === 'sans' && !/sans/i.test(raw)) info.kind = 'serif';
+  if (info.data) info.fk = fkCreate(info.data);
+  // Umkehrtabelle Zeichen -> Zeichencode aus der ToUnicode-Tabelle des PDFs
+  const tu = f && f.toUnicode;
+  if (tu && tu._map){
+    const m = tu._map;
+    for (const k in m){ const u = m[k]; if (typeof u === 'string' && u.length && u !== '\u0000' && [...u].length === 1 && !info.inv.has(u)) info.inv.set(u, +k); }
+  } else if (tu && typeof tu.firstChar === 'number'){
+    for (let c = tu.firstChar; c <= Math.min(tu.lastChar, 0xffff); c++) info.inv.set(String.fromCodePoint(c), c);
+  }
+  S.fonts[fontName] = info;
+  return info;
+}
+// Prüft, ob der Glyph für einen Zeichencode wirklich in der eingebetteten (Teil-)Schrift steckt
+function glyphOk(info, code, ch){
+  if (!info.data) return true;                      // nicht eingebettet: Anzeigeprogramm ergänzt die Schrift
+  if (!info.fk || !info.toFontChar) return true;
+  const fc = info.toFontChar[code];
+  if (typeof fc !== 'number') return true;
+  try {
+    const g = info.fk.glyphForCodePoint(fc);
+    if (!g || g.id === 0) return false;
+    if (/\s/.test(ch)) return true;
+    const cmds = g.path && g.path.commands;
+    return !!(cmds && cmds.length);
+  } catch(_) { return true; }
+}
+// Text in Zeichencodes der Originalschrift umwandeln; null, wenn ein Zeichen fehlt
+function pdfEncode(info, text){
+  if (!info || info.type3 || !info.inv.size) return null;
+  const out = [];
+  for (const ch of text){
+    if (ch === '\n') continue;
+    const code = info.inv.get(ch === ' ' ? ' ' : ch);
+    if (code === undefined || !glyphOk(info, code, ch)){
+      if (ch === ' ' || ch === ' '){ out.push(-1); continue; }   // fehlendes Leerzeichen: wird als Abstand gesetzt
+      return null;
+    }
+    // Word speichert bei einfachen Schriften nur Breiten für benutzte Zeichen (sonst 0) -> Breite ergänzen
+    if (!info.composite && !/\s/.test(ch) && !(info.widths[code] > 0)){
+      const nw = missingWidth(info, code, ch);
+      if (!nw) return null;
+      info.widths[code] = nw; info.patchW.set(code, nw);
+    }
+    out.push(code);
+  }
+  return out;
+}
+function stdMetricName(info){
+  const b = info.bold, i = info.italic;
+  if (info.kind === 'serif') return b && i ? 'Times-BoldItalic' : b ? 'Times-Bold' : i ? 'Times-Italic' : 'Times-Roman';
+  if (info.kind === 'mono') return b && i ? 'Courier-BoldOblique' : b ? 'Courier-Bold' : i ? 'Courier-Oblique' : 'Courier';
+  return b && i ? 'Helvetica-BoldOblique' : b ? 'Helvetica-Bold' : i ? 'Helvetica-Oblique' : 'Helvetica';
+}
+// Breite (1/1000) eines Zeichens, das im Widths-Array des PDFs fehlt
+function missingWidth(info, code, ch){
+  try {
+    if (info.data){
+      const fc = info.toFontChar && info.toFontChar[code];
+      if (!info.fk || typeof fc !== 'number') return null;
+      const g = info.fk.glyphForCodePoint(fc);
+      return g && g.id ? g.advanceWidth * 1000 / info.fk.unitsPerEm : null;
+    }
+    // nicht eingebettet: Arial/Times/Courier haben dieselben Breiten wie die Standardschriften
+    const w = PDFLib.StandardFontEmbedder.for(stdMetricName(info)).widthOfTextAtSize(ch, 1000);
+    return w > 0 ? w : null;
+  } catch(_) { return null; }
+}
+// Ergänzte Breiten in das Widths-Array der Schrift schreiben
+function patchWidths(page, key, info){
+  if (!info.patchW.size) return;
+  try {
+    const L = PDFLib, ctx = page.doc.context;
+    const fonts = page.node.Resources().lookup(L.PDFName.of('Font'));
+    const fd = ctx.lookup(fonts.get(key));
+    let first = fd.lookup(L.PDFName.of('FirstChar')), last = fd.lookup(L.PDFName.of('LastChar'));
+    let arr = fd.lookup(L.PDFName.of('Widths'));
+    if (!first || !last || !arr) return;
+    first = first.asNumber(); last = last.asNumber();
+    for (const [code, w] of info.patchW){
+      while (code < first){ arr.insert(0, L.PDFNumber.of(0)); first--; }
+      while (code > last){ arr.push(L.PDFNumber.of(0)); last++; }
+      arr.set(code - first, L.PDFNumber.of(Math.round(w)));
+    }
+    fd.set(L.PDFName.of('FirstChar'), L.PDFNumber.of(first));
+    fd.set(L.PDFName.of('LastChar'), L.PDFNumber.of(last));
+  } catch(err){ console.warn('Widths', err); }
+}
+const GAP = 280;   // Breite eines nachgebauten Leerzeichens in 1/1000 Schriftgröße
+function pdfWidth(info, codes, size){
+  let w = 0;
+  for (const c of codes) w += c < 0 ? GAP : (info.widths[c] != null ? info.widths[c] : (info.dw || 500));
+  return w / 1000 * size;
+}
+// Schreibt Text direkt mit der Schrift-Ressource der Seite (Originalschrift, keine Ersatzschrift)
+function pdfResourceName(page, info){
+  try {
+    const res = page.node.Resources(); if (!res) return null;
+    const fonts = res.lookup(PDFLib.PDFName.of('Font')); if (!fonts || !fonts.entries) return null;
+    for (const [key, ref] of fonts.entries()){
+      const fd = page.doc.context.lookup(ref);
+      const bf = fd && fd.lookup && fd.lookup(PDFLib.PDFName.of('BaseFont'));
+      const name = bf && (bf.decodeText ? bf.decodeText() : String(bf)).replace(/^\//,'');
+      const st = fd.lookup(PDFLib.PDFName.of('Subtype'));
+      const isT0 = !!st && String(st) === '/Type0';
+      if (name === info.raw && isT0 === info.composite) return key;
+    }
+  } catch(err){ console.warn(err); }
+  return null;
+}
+function pdfDraw(page, key, info, codes, x, y, size, rgb){
+  const L = PDFLib, bpc = info.composite ? 2 : 1, parts = [];
+  let hex = '';
+  const flush = () => { if (hex){ parts.push(L.PDFHexString.of(hex)); hex = ''; } };
+  for (const c of codes){
+    if (c < 0){ flush(); parts.push(L.PDFNumber.of(-GAP)); }
+    else hex += c.toString(16).padStart(2*bpc, '0');
+  }
+  flush();
+  if (!parts.length) return;
+  const op = (o, a) => L.PDFOperator.of(o, a || []);
+  page.pushOperators(
+    op('q'), op('BT'),
+    op('Tf', [key, L.PDFNumber.of(size)]),
+    op('Tc', [L.PDFNumber.of(0)]), op('Tw', [L.PDFNumber.of(0)]), op('Tz', [L.PDFNumber.of(100)]), op('Tr', [L.PDFNumber.of(0)]),
+    op('rg', [L.PDFNumber.of(rgb.red), L.PDFNumber.of(rgb.green), L.PDFNumber.of(rgb.blue)]),
+    op('Tm', [1,0,0,1,x,y].map(n => L.PDFNumber.of(n))),
+    op('TJ', [page.doc.context.obj(parts)]),
+    op('ET'), op('Q'));
+}
+// ============ Eingebaute Schriften (frei, gleiche Maße wie das Original) ============
+const BUNDLE = (() => { try { return JSON.parse(document.getElementById('bfonts').textContent); } catch(_) { return {}; } })();
+const CLONES = {calibri:'carlito', carlito:'carlito', cambria:'caladea', caladea:'caladea',
+  dejavusans:'dejavusans', dejavusansmono:'dejavusansmono', dejavuserif:'dejavuserif'};
+const CLONE_LABEL = {carlito:'Carlito (wie Calibri)', caladea:'Caladea (wie Cambria)', dejavusans:'DejaVu Sans',
+  dejavusansmono:'DejaVu Sans Mono', dejavuserif:'DejaVu Serif'};
+const bundleCache = {};
+function bundled(fam, bold, italic){
+  const key = fam + '|' + (bold?1:0) + '|' + (italic?1:0);
+  if (key in bundleCache) return bundleCache[key];
+  const b64 = BUNDLE[key];
+  if (!b64) return (bundleCache[key] = null);
+  const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  const css = 'lzb_' + fam + (bold?'_b':'') + (italic?'_i':'');
+  try { new FontFace(css, bytes).load().then(f => document.fonts.add(f)).catch(() => {}); } catch(_) {}
+  return (bundleCache[key] = {bytes, fk:fkCreate(bytes), css:'"'+css+'"', label:CLONE_LABEL[fam]});
+}
+function bundledFor(info, bold, italic){
+  const fam = CLONES[familyKey(info.base)];
+  return fam ? bundled(fam, bold, italic) : null;
+}
+// Text in Stücke teilen: vorhandene Zeichen (Originalschrift) und fehlende Zeichen
+function pdfRuns(info, text){
+  if (!info || info.type3 || !info.inv.size) return null;
+  const runs = [];
+  for (const ch of text){
+    if (ch === '\n') continue;
+    const ok = pdfEncode(info, ch) !== null;
+    const last = runs[runs.length-1];
+    if (last && last.o === ok) last.s += ch; else runs.push({o:ok, s:ch});
+  }
+  return runs;
+}
+// Ersatz in derselben Optik: eigene Schriftdatei > PC-Schrift > eingebaute Schrift mit gleichen Maßen
+async function lookalike(info, bold, italic, text){
+  const man = S.manual[info.id + '|' + bold + '|' + italic];
+  if (man && covers(man.fk, text)) return {kind:'file', bytes:man.bytes, css:man.css, label:man.label, note:'aus Schriftdatei'};
+  const l = matchLocal(info, bold, italic);
+  if (l){ await localBytes(l); if (l.fk && covers(l.fk, text))
+    return {kind:'local', bytes:l.bytes, css:'"'+l.family+'"', label:l.fd.fullName, note:'vom PC'}; }
+  const b = bundledFor(info, bold, italic);
+  if (b && b.fk && covers(b.fk, text)) return {kind:'bundle', bytes:b.bytes, css:b.css, label:b.label, note:'eingebaut, gleiche Maße'};
+  return null;
+}
+
+function cssGuess(info){
+  const fam = baseName(info.base).split(/[-,]/)[0].replace(/(PS)?MT$/,'').replace(/PS$/,'').replace(/([a-z])([A-Z])/g,'$1 $2');
+  return '"' + fam + '"';
+}
+
+// Installierte Schriften (Local Font Access, Chrome/Edge)
+async function enableLocalFonts(auto){
+  if (S.local) return true;
+  if (!('queryLocalFonts' in window)){ if (!auto) status('Dieser Browser erlaubt keinen Zugriff auf installierte Schriften. Bitte Chrome oder Edge nutzen oder die Schriftdatei manuell wählen.'); return false; }
+  try {
+    const list = await window.queryLocalFonts();
+    S.local = list.map(fd => ({fd, ps:norm(fd.postscriptName), full:norm(fd.fullName), fam:norm(fd.family),
+      family:fd.family, style:(fd.style||'').toLowerCase(), bytes:null, fk:null}));
+    $('lfa').textContent = S.local.length + ' PC-Schriften freigegeben';
+    $('lfa').disabled = true;
+    status('Installierte Schriften werden jetzt automatisch genutzt.');
+    if (S.active) updateFont(S.active);
+    return true;
+  } catch(err){ if (!auto) status('Zugriff auf Schriften wurde nicht erlaubt.'); return false; }
+}
+$('lfa').addEventListener('click', () => enableLocalFonts(false));
+
+function matchLocal(info, bold, italic){
+  if (!S.local || !info) return null;
+  const sameStyle = bold === info.bold && italic === info.italic;
+  if (sameStyle){
+    const n = norm(info.base);
+    const hit = S.local.find(l => l.ps === n) || S.local.find(l => l.full === n);
+    if (hit) return hit;
+  }
+  const fam = familyKey(info.base);
+  const cands = S.local.filter(l => l.fam === fam || l.ps.startsWith(fam) || (fam.length > 3 && l.fam.startsWith(fam)));
+  if (!cands.length) return null;
+  const score = l => { const b = /bold|black|heavy|semibold|fett/.test(l.style), i = /italic|oblique|kursiv/.test(l.style);
+    return (b===bold?2:0) + (i===italic?2:0) + (/regular|normal|standard|roman|book/.test(l.style)?0.5:0); };
+  return cands.sort((a,b) => score(b)-score(a))[0];
+}
+async function localBytes(l){
+  if (!l.bytes){ try { l.bytes = new Uint8Array(await (await l.fd.blob()).arrayBuffer()); l.fk = fkCreate(l.bytes); } catch(_) { l.bytes = new Uint8Array(0); } }
+  return l;
+}
+
+// Manuelle Schriftdatei für die Schrift des aktiven Felds
+$('fontFile').addEventListener('change', async ev => {
+  const file = ev.target.files[0]; ev.target.value = '';
+  if (!file || !S.active || !S.active.info) return;
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const fk = fkCreate(bytes);
+  if (!fk){ status('Diese Datei kann nicht verwendet werden. Bitte eine .ttf- oder .otf-Datei wählen (keine .ttc).'); return; }
+  const fam = 'lzman_' + Object.keys(S.manual).length;
+  try { const ff = new FontFace(fam, bytes); await ff.load(); document.fonts.add(ff); } catch(_) {}
+  S.manual[S.active.info.id + '|' + S.active.bold + '|' + S.active.italic] = {bytes, fk, css:fam, label:file.name};
+  status(file.name + ' wird für „' + S.active.info.base + '“ verwendet.');
+  updateFont(S.active);
+});
+
+// Entscheidet, mit welcher Schrift ein Feld gesetzt wird
+async function resolveFont(e, text){
+  const info = e.info;
+  if (info){
+    const sameStyle = e.bold === info.bold && e.italic === info.italic;
+    if (sameStyle){
+      const codes = pdfEncode(info, text);
+      if (codes) return {kind:'pdf', codes, css:cssGuess(info), label:info.base, note:'Originalschrift aus dem PDF'};
+    }
+    const full = await lookalike(info, e.bold, e.italic, text);
+    if (full) return full;
+    if (sameStyle){
+      const runs = pdfRuns(info, text);
+      if (runs && runs.some(r => r.o)){
+        const miss = [...new Set(runs.filter(r => !r.o).map(r => r.s).join('').replace(/\s/g, ''))].join(' ');
+        const missText = runs.filter(r => !r.o).map(r => r.s).join('');
+        const sub = await lookalike(info, e.bold, e.italic, missText) ||
+          {kind:'std', css:cssStd(stdKindOf(e)), label:stdLabel(e)};
+        return {kind:'mix', runs, sub, css:cssGuess(info), label:info.base, note:'gemischt',
+          msg: info.base + ' → Original, nur „' + miss + '“ fehlt' + (miss.length > 1 ? 'en' : '') + ' → ' + sub.label,
+          soft: sub.kind === 'std'};
+      }
+    }
+  }
+  return {kind:'std', css:cssStd(stdKindOf(e)), label:stdLabel(e), note: info ? 'Ersatzschrift' : 'Standardschrift', warn:!!info};
+}
+const stdKindOf = e => e.info ? e.info.kind : (e.kind || 'sans');
+const cssStd = k => k==='serif' ? '"Times New Roman",Times,serif' : k==='mono' ? '"Courier New",Courier,monospace' : 'Helvetica,Arial,sans-serif';
+function stdLabel(e){ const k = stdKindOf(e); return (k==='serif'?'Times':k==='mono'?'Courier':'Helvetica') + (e.bold?' Fett':'') + (e.italic?' Kursiv':''); }
+
+async function updateFont(e){
+  const text = e.el.innerText;
+  const r = await resolveFont(e, text);
+  e.res = r;
+  e.el.style.fontFamily = r.css + ',' + cssStd(stdKindOf(e));
+  e.el.style.fontWeight = e.bold ? '700' : '400';
+  e.el.style.fontStyle = e.italic ? 'italic' : 'normal';
+  if (S.active === e) showChip(e, r);
+  // fehlen Zeichen: einmalig automatisch nach den PC-Schriften fragen (Chrome/Edge)
+  if ((r.warn || r.kind === 'mix') && !S.local && !S.lfaAsked && 'queryLocalFonts' in window){
+    S.lfaAsked = true;
+    enableLocalFonts(true).then(ok => { if (ok) updateFont(e); });
+  }
+}
+function showChip(e, r){
+  const chip = $('fontChip');
+  chip.hidden = false;
+  chip.className = 'chip ' + (r.warn || r.soft ? 'warn' : 'ok');
+  chip.innerHTML = '';
+  const dot = document.createElement('i'); chip.appendChild(dot);
+  const src = e.info ? e.info.base : 'Neuer Text';
+  chip.appendChild(document.createTextNode(r.msg ? r.msg : r.warn
+    ? src + ': nicht alle Zeichen vorhanden → ' + r.label
+    : src + ' → ' + r.label + ' (' + r.note + ')'));
+  $('fontFileBtn').hidden = !((r.warn || r.soft) && e.info);
+}
+
+// ============ PDF laden ============
+$('file').addEventListener('change', e => { if (e.target.files[0]) load(e.target.files[0]); e.target.value=''; });
+document.addEventListener('dragover', e => { e.preventDefault(); const d=$('drop'); if (d) d.classList.add('hover'); });
+document.addEventListener('dragleave', () => { const d=$('drop'); if (d) d.classList.remove('hover'); });
+document.addEventListener('drop', e => {
+  e.preventDefault();
+  const f = [...e.dataTransfer.files].find(f => /pdf$/i.test(f.type) || /\.pdf$/i.test(f.name));
+  if (f) load(f);
+});
+
+async function load(file){
+  S.name = file.name; S.edits = []; S.active = null; S.fonts = {}; S.manual = {}; S.lastInfo = null;
+  $('fontChip').hidden = true; $('fontFileBtn').hidden = true;
+  status('Lade ' + file.name + ' …');
+  S.bytes = new Uint8Array(await file.arrayBuffer());
+  main.innerHTML = '';
+  let pdf;
+  try { pdf = await pdfjsLib.getDocument({data:S.bytes.slice(), fontExtraProperties:true}).promise; }
+  catch(err){ status('Die Datei konnte nicht geöffnet werden. Ist sie passwortgeschützt oder beschädigt?'); S.bytes=null; refresh(); return; }
+  const avail = Math.min(main.clientWidth - 32, 1100);
+  for (let i = 1; i <= pdf.numPages; i++){
+    status('Seite ' + i + ' von ' + pdf.numPages + ' …');
+    try { await renderPage(pdf, i, avail); } catch(err){ console.error(err); }
+  }
+  const hint = document.createElement('p'); hint.className = 'hint';
+  hint.textContent = 'Gescannte Seiten bestehen nur aus Bildern und enthalten keinen erkennbaren Text. Dort hilft nur „Text hinzufügen“.';
+  main.appendChild(hint);
+  status(S.name + ' · ' + pdf.numPages + ' Seite(n)');
+  refresh();
+}
+
+async function renderPage(pdf, num, avail){
+  const page = await pdf.getPage(num);
+  const base = page.getViewport({scale:1});
+  const scale = Math.min(2, avail / base.width);
+  const vp = page.getViewport({scale});
+  const dpr = window.devicePixelRatio || 1;
+
+  const wrap = document.createElement('div'); wrap.className = 'page';
+  wrap.style.width = vp.width + 'px'; wrap.style.height = vp.height + 'px';
+  const no = document.createElement('div'); no.className = 'pno'; no.textContent = 'SEITE ' + num;
+  const cv = document.createElement('canvas');
+  cv.width = Math.floor(vp.width*dpr); cv.height = Math.floor(vp.height*dpr);
+  cv.style.width = vp.width + 'px'; cv.style.height = vp.height + 'px';
+  const layer = document.createElement('div'); layer.className = 'layer';
+  wrap.append(no, cv, layer); main.appendChild(wrap);
+
+  await page.render({canvasContext:cv.getContext('2d'), viewport:vp, transform: dpr!==1 ? [dpr,0,0,dpr,0,0] : null}).promise;
+  // zweites Rendern ohne Anmerkungen: daraus werden Text- und Hintergrundfarbe gelesen
+  const sc = document.createElement('canvas'); sc.width = Math.floor(vp.width); sc.height = Math.floor(vp.height);
+  const sctx = sc.getContext('2d', {willReadFrequently:true});
+  await page.render({canvasContext:sctx, viewport:vp, annotationMode:pdfjsLib.AnnotationMode.DISABLE}).promise;
+
+  const tc = await page.getTextContent();
+  const lines = groupLines(tc.items, tc.styles, page);
+  const ctx = {page:num-1, vp, scale, layer, sctx};
+  for (const ln of lines){
+    const [vx, vy] = vp.convertToViewportPoint(ln.x, ln.y);
+    const fs = ln.size*scale;
+    ln.box = {x:vx, y:vy - fs*0.9, w:Math.max(ln.w*scale, 4), h:fs*1.15};
+    const col = sampleColors(sctx, ln.box);
+    ln.fg = col.fg; ln.bg = col.bg;
+    const el = document.createElement('div'); el.className = 'ln';
+    Object.assign(el.style, {left:ln.box.x+'px', top:ln.box.y+'px', width:ln.box.w+'px', height:ln.box.h+'px', fontSize:fs+'px'});
+    el.textContent = ln.text;
+    ln.el = el;
+    el.addEventListener('click', ev => {
+      if (S.mode === 'line'){ ev.stopPropagation(); openLine(ln, ctx); }
+      else if (S.mode === 'para' && ln.block){ ev.stopPropagation(); openPara(ln.block, ctx); }
+    });
+    el.addEventListener('mouseenter', () => { if (S.mode==='para' && ln.block) ln.block.lines.forEach(l => l.el.classList.add('hl')); });
+    el.addEventListener('mouseleave', () => { if (ln.block) ln.block.lines.forEach(l => l.el.classList.remove('hl')); });
+    layer.appendChild(el);
+  }
+  for (const b of groupBlocks(lines)){ b.lines.forEach(l => { l.block = b; l.el.classList.add('inpara'); }); }
+
+  layer.addEventListener('click', ev => {
+    if (S.mode !== 'add' || ev.target !== layer) return;
+    const r = layer.getBoundingClientRect();
+    const size = parseFloat($('fSize').value) || 11;
+    const [x, y] = vp.convertToPdfPoint(ev.clientX - r.left, ev.clientY - r.top + size*scale*0.8);
+    const info = S.lastInfo;
+    const e = {type:'add', page:ctx.page, x, y, w:0, size, lead:size*1.2, info,
+      bold: info ? info.bold : $('fBold').classList.contains('on'), italic: info ? info.italic : $('fItal').classList.contains('on'),
+      color:$('fColor').value, bg:null, orig:'', hide:[], ctx};
+    makeEditor(e, '');
+  });
+}
+
+// Textstücke zu Zeilen zusammenfassen
+const BULLET = /^[•·▪■□●○◦‣⁃\-–—\uf0b7\uf0a7\uf076\uf0d8\uf0fc]$/;
+function groupLines(items, styles, page){
+  const list = items.filter(it => it.str && it.transform && Math.abs(it.transform[1])<1e-3 && Math.abs(it.transform[2])<1e-3)
+    .map(it => { const t = it.transform; return {str:it.str, x:t[4], y:t[5], size:Math.abs(t[3])||Math.abs(t[0]), w:it.width,
+      info:fontInfo(page, it.fontName, styles)}; })
+    .filter(it => it.size > 0)
+    .sort((a,b) => Math.abs(b.y-a.y) > Math.min(a.size,b.size)*0.3 ? b.y-a.y : a.x-b.x);
+  const out = []; let cur = null;
+  for (const it of list){
+    // breite Leer-Stücke (pdf.js überbrückt damit Spalten/Tabellenzellen) trennen die Zeile
+    if (!it.str.trim() && it.w > it.size*0.8){ if (cur) out.push(cur); cur = null; continue; }
+    // Aufzählungszeichen am Zeilenanfang bleiben eine eigene Zeile (werden beim Bearbeiten nicht gelöscht)
+    if (BULLET.test(it.str.trim()) && !(cur && Math.abs(it.y-cur.y) < cur.size*0.3)){
+      if (cur) out.push(cur);
+      out.push({bullet:true, text:it.str.trim(), x:it.x, y:it.y, size:it.size, w:it.w, counts:new Map([[it.info, 1]]), sizes:new Map([[it.size, 1]])});
+      cur = null; continue;
+    }
+    if (!it.str.trim() && !cur) continue;          // Leerzeichen am Zeilenanfang nicht mitzählen
+    const same = cur && Math.abs(it.y-cur.y) < cur.size*0.3;
+    const gap = cur ? it.x - (cur.x+cur.w) : 0;
+    if (same && gap < cur.size*1.2 && gap > -cur.size*0.5){
+      const sp = gap > cur.size*0.15 && !/\s$/.test(cur.text) && !/^\s/.test(it.str);
+      cur.text += (sp?' ':'') + it.str;
+      cur.w = Math.max(cur.w, it.x+it.w-cur.x);
+      cur.counts.set(it.info, (cur.counts.get(it.info)||0) + it.str.length);
+      if (it.str.trim()) cur.sizes.set(it.size, (cur.sizes.get(it.size)||0) + it.str.length);
+    } else {
+      if (cur) out.push(cur);
+      const prev = out[out.length-1];
+      cur = {afterBullet: !!(prev && prev.bullet && Math.abs(prev.y-it.y) < it.size*0.5), text:it.str, x:it.x, y:it.y, size:it.size, w:it.w, counts:new Map([[it.info, it.str.length]]), sizes:new Map([[it.size, it.str.length]])};
+    }
+  }
+  if (cur) out.push(cur);
+  return out.filter(l => l.text.trim()).map(l => {
+    let best = null, n = -1; l.counts.forEach((c, inf) => { if (c > n){ n = c; best = inf; } });
+    l.info = best; delete l.counts;
+    let bs = l.size, bn = -1; l.sizes.forEach((c, sz) => { if (c > bn){ bn = c; bs = sz; } });
+    l.size = bs; delete l.sizes; return l;
+  });
+}
+
+// Zeilen zu Absätzen zusammenfassen
+function groupBlocks(lines){
+  const blocks = [];
+  for (const ln of lines){
+    if (ln.bullet) continue;
+    let host = null;
+    if (!ln.afterBullet) for (const b of blocks){
+      const last = b.lines[b.lines.length-1];
+      const dy = last.y - ln.y;
+      if (Math.abs(ln.size - b.size) > b.size*0.15) continue;
+      if (dy <= ln.size*0.5 || dy > ln.size*1.75) continue;
+      if (b.lines.length > 1 && Math.abs(dy - b.lead) > ln.size*0.3) continue;
+      if (Math.abs(ln.x - b.x) > ln.size*1.6) continue;
+      host = b; break;
+    }
+    if (host){ host.lead = host.lines.length===1 ? host.lines[0].y - ln.y : host.lead; host.lines.push(ln);
+      host.w = Math.max(host.x+host.w, ln.x+ln.w) - Math.min(host.x, ln.x); host.x = Math.min(host.x, ln.x); }
+    else blocks.push({lines:[ln], x:ln.x, w:ln.w, size:ln.size, lead:ln.size*1.2});
+  }
+  return blocks;
+}
+
+// Text- und Hintergrundfarbe aus dem gerenderten Bild lesen
+function sampleColors(ctx, box){
+  const x = Math.max(0, Math.floor(box.x)), y = Math.max(0, Math.floor(box.y));
+  const w = Math.max(1, Math.min(ctx.canvas.width - x, Math.ceil(box.w))), h = Math.max(1, Math.min(ctx.canvas.height - y, Math.ceil(box.h)));
+  let d; try { d = ctx.getImageData(x, y, w, h).data; } catch(_) { return {fg:'#000000', bg:'#ffffff'}; }
+  const buckets = new Map();
+  for (let i = 0; i < d.length; i += 4){
+    if (d[i+3] < 200) continue;
+    const k = (d[i]>>4)<<8 | (d[i+1]>>4)<<4 | (d[i+2]>>4);
+    let b = buckets.get(k); if (!b){ b = {n:0, r:0, g:0, b:0}; buckets.set(k, b); }
+    b.n++; b.r += d[i]; b.g += d[i+1]; b.b += d[i+2];
+  }
+  const arr = [...buckets.values()].map(b => ({n:b.n, r:b.r/b.n, g:b.g/b.n, b:b.b/b.n})).sort((a,b) => b.n-a.n);
+  if (!arr.length) return {fg:'#000000', bg:'#ffffff'};
+  const bg = arr[0];
+  const dist = c => Math.hypot(c.r-bg.r, c.g-bg.g, c.b-bg.b);
+  // Kantenpixel dünner Schrift sind Mischfarben: kräftigsten Farbton nehmen, der oft genug vorkommt
+  const cand = arr.filter(c => dist(c) > 90);
+  const maxN = cand.reduce((m, c) => Math.max(m, c.n), 0);
+  const fgC = cand.filter(c => c.n >= Math.max(2, maxN*0.25)).sort((a,b) => dist(b) - dist(a))[0];
+  const hex = c => '#' + [c.r,c.g,c.b].map(v => Math.round(v).toString(16).padStart(2,'0')).join('');
+  return {bg:hex(bg), fg: fgC ? hex(fgC) : '#000000'};
+}
+
+// ============ Bearbeiten ============
+function openLine(ln, ctx){
+  if (ln.el.dataset.done) return;
+  const e = {type:'line', page:ctx.page, x:ln.x, y:ln.y, w:ln.w, size:ln.size, lead:ln.size*1.2, info:ln.info,
+    bold:ln.info ? ln.info.bold : false, italic:ln.info ? ln.info.italic : false,
+    color:ln.fg, bg:ln.bg, orig:ln.text, hide:[ln], ctx};
+  makeEditor(e, ln.text);
+}
+function openPara(b, ctx){
+  if (b.lines.some(l => l.el.dataset.done)) return;
+  if (b.lines.length === 1) return openLine(b.lines[0], ctx);
+  let text = '';
+  b.lines.forEach((l, i) => {
+    const t = l.text.trim();
+    if (i === 0) text = t;
+    else if (/[A-Za-zÄÖÜäöüß]-$/.test(text) && /^[a-zäöüß]/.test(t)) text = text.slice(0, -1) + t;
+    else text += ' ' + t;
+  });
+  const first = b.lines[0], last = b.lines[b.lines.length-1];
+  const e = {type:'para', page:ctx.page, x:b.x, y:first.y, w:b.w, size:first.size, lead:b.lead, nOrig:b.lines.length,
+    yLast:last.y, info:first.info, bold:first.info ? first.info.bold : false, italic:first.info ? first.info.italic : false,
+    color:first.fg, bg:first.bg, orig:text, hide:b.lines, ctx};
+  makeEditor(e, text);
+}
+
+function makeEditor(e, text){
+  e.hide.forEach(l => { l.el.dataset.done = '1'; l.el.hidden = true; });
+  const ed = document.createElement('div');
+  ed.className = 'ed' + (e.type==='para' ? ' para' : '');
+  ed.contentEditable = 'true'; ed.spellcheck = false;
+  ed.textContent = text;
+  e.el = ed;
+  if (e.info) S.lastInfo = e.info;
+  place(e);
+  ed.addEventListener('focus', () => select(e));
+  ed.addEventListener('keydown', ev => { if (ev.key === 'Enter' && e.type !== 'para'){ ev.preventDefault(); ed.blur(); } });
+  ed.addEventListener('paste', ev => {
+    ev.preventDefault();
+    let t = ev.clipboardData.getData('text/plain') || '';
+    if (e.type !== 'para') t = t.replace(/\s*\n\s*/g, ' ');
+    document.execCommand('insertText', false, t);
+  });
+  ed.addEventListener('input', () => { updateFont(e); if (e.type==='para') checkOverflow(e); });
+  e.ctx.layer.appendChild(ed);
+  S.edits.push(e); refresh();
+  updateFont(e);
+  ed.focus();
+  const r = document.createRange(); r.selectNodeContents(ed); r.collapse(false);
+  const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+}
+
+function place(e){
+  const {vp, scale} = e.ctx;
+  const [vx, vy] = vp.convertToViewportPoint(e.x, e.y);
+  const fs = e.size*scale, lh = (e.type==='para' ? e.lead : e.size*1.15)*scale;
+  const s = e.el.style;
+  s.left = vx + 'px';
+  s.top = (vy - fs*0.9 - (lh - fs*1.15)/2) + 'px';
+  s.fontSize = fs + 'px';
+  s.lineHeight = lh + 'px';
+  s.color = e.color;
+  s.background = e.bg || 'transparent';
+  if (e.type === 'para'){ s.width = (e.w*scale + 2) + 'px'; s.minHeight = (lh*e.nOrig) + 'px'; }
+  else { s.minWidth = Math.max(e.w*scale, 6) + 'px'; s.height = lh + 'px'; }
+}
+function checkOverflow(e){
+  const lh = e.lead*e.ctx.scale;
+  const n = Math.round(e.el.scrollHeight / lh);
+  const over = n > e.nOrig;
+  e.el.classList.toggle('over', over);
+  if (over) status('Achtung: Der Absatz ist jetzt länger als vorher und kann den Text darunter überdecken.');
+}
+function select(e){
+  S.active = e;
+  $('fSize').value = Math.round(e.size*10)/10;
+  $('fColor').value = e.color;
+  $('fBold').classList.toggle('on', e.bold);
+  $('fItal').classList.toggle('on', e.italic);
+  if (e.res) showChip(e, e.res);
+}
+$('fSize').addEventListener('input', () => { const e = S.active; if (!e) return;
+  const v = parseFloat($('fSize').value); if (!v) return; if (e.type==='para') e.lead = e.lead * v / e.size; e.size = v; place(e); });
+$('fColor').addEventListener('input', () => { if (S.active){ S.active.color = $('fColor').value; place(S.active); }});
+for (const [id, key] of [['fBold','bold'],['fItal','italic']]){
+  $(id).addEventListener('mousedown', ev => ev.preventDefault());
+  $(id).addEventListener('click', () => { $(id).classList.toggle('on'); if (S.active){ S.active[key] = $(id).classList.contains('on'); updateFont(S.active); }});
+}
+$('undo').addEventListener('click', () => {
+  const e = S.edits.pop(); if (!e) return;
+  e.el.remove();
+  e.hide.forEach(l => { l.el.hidden = false; delete l.el.dataset.done; });
+  if (S.active === e) S.active = null;
+  $('fontChip').hidden = true; $('fontFileBtn').hidden = true;
+  refresh();
+});
+$('clean').addEventListener('click', () => { const on = document.body.classList.toggle('clean'); $('clean').classList.toggle('on', on); });
+function setMode(m){
+  S.mode = m;
+  document.body.className = document.body.className.replace(/\bm-\w+/g, '').trim() + ' m-' + m;
+  $('mLine').classList.toggle('on', m==='line'); $('mPara').classList.toggle('on', m==='para'); $('mAdd').classList.toggle('on', m==='add');
+}
+$('mLine').addEventListener('click', () => setMode('line'));
+$('mPara').addEventListener('click', () => setMode('para'));
+$('mAdd').addEventListener('click', () => setMode('add'));
+
+// ============ Speichern ============
+function hexToRgb(h){ const n = parseInt((h||'#000000').slice(1), 16); return PDFLib.rgb(((n>>16)&255)/255, ((n>>8)&255)/255, (n&255)/255); }
+function stdFontName(e){
+  const F = PDFLib.StandardFonts, k = stdKindOf(e), b = e.bold, i = e.italic;
+  if (k === 'serif') return b&&i ? F.TimesRomanBoldItalic : b ? F.TimesRomanBold : i ? F.TimesRomanItalic : F.TimesRoman;
+  if (k === 'mono') return b&&i ? F.CourierBoldOblique : b ? F.CourierBold : i ? F.CourierOblique : F.Courier;
+  return b&&i ? F.HelveticaBoldOblique : b ? F.HelveticaBold : i ? F.HelveticaOblique : F.Helvetica;
+}
+function safeStd(font, s){
+  let out = '';
+  for (const ch of s){
+    try { font.encodeText(ch); out += ch; }
+    catch(_) { out += ({'–':'-','—':'-','„':'"','“':'"','”':'"','‚':"'",'‘':"'",'’':"'",'…':'...',' ':' '})[ch] || '?'; }
+  }
+  return out;
+}
+function wrapText(widthOf, text, maxW){
+  const out = [];
+  for (const para of text.split('\n')){
+    const words = para.split(/ +/); let line = '';
+    for (const w of words){
+      const test = line ? line + ' ' + w : w;
+      if (!line || widthOf(test) <= maxW) line = test;
+      else { out.push(line); line = w; }
+    }
+    out.push(line);
+  }
+  return out;
+}
+
+$('save').addEventListener('click', async () => {
+  if (!S.bytes) return;
+  status('Speichere …');
+  const warnings = [];
+  try {
+    const doc = await PDFLib.PDFDocument.load(S.bytes, {ignoreEncryption:true});
+    if (doc.isEncrypted){
+      status('Diese PDF ist verschlüsselt (Kopierschutz). Speichern ist nicht möglich, die Datei würde beschädigt. Tipp: In Chrome öffnen, „Drucken“ → „Als PDF speichern“, dann diese Kopie bearbeiten.');
+      return;
+    }
+    doc.registerFontkit(fontkit);
+    const cache = new Map(), patchList = [];
+    const pages = doc.getPages();
+    for (const e of S.edits){
+      const page = pages[e.page];
+      let text = e.el.innerText.replace(/ /g, ' ');
+      if (e.type !== 'para') text = text.replace(/\s*\n\s*/g, ' ');
+      text = text.replace(/\n+$/, '');
+      const changed = text !== e.orig || e.color !== (e.hide[0] && e.hide[0].fg) || e.size !== (e.hide[0] && e.hide[0].size)
+        || (e.info && (e.bold !== e.info.bold || e.italic !== e.info.italic));
+      if (e.type !== 'add' && !changed) continue;
+      const bg = hexToRgb(e.bg || '#ffffff');
+      if (e.type === 'line'){
+        page.drawRectangle({x:e.x-1, y:e.y - e.size*0.28, width:e.w+2, height:e.size*1.22, color:bg});
+      } else if (e.type === 'para'){
+        const top = e.y + e.size*0.94, bottom = e.yLast - e.size*0.28;
+        page.drawRectangle({x:e.x-1, y:bottom, width:e.w+2, height:top-bottom, color:bg});
+      }
+      if (!text.trim()) continue;
+
+      const color = hexToRgb(e.color);
+      const r = await resolveFont(e, text.replace(/\n/g, ''));
+      // Schrift einbetten (Datei/PC/eingebaut) oder Standardschrift
+      const embedOf = async rr => {
+        if (rr.kind === 'std'){
+          const k = 'std:' + stdFontName(e);
+          if (!cache.has(k)) cache.set(k, await doc.embedFont(stdFontName(e)));
+          return {font:cache.get(k), std:true};
+        }
+        const k = rr.kind + ':' + rr.label + ':' + e.bold + e.italic;
+        if (!cache.has(k)){ try { cache.set(k, await doc.embedFont(rr.bytes, {subset:false})); } catch(err){ console.warn(err); cache.set(k, null); } }
+        return cache.get(k) ? {font:cache.get(k)} : null;
+      };
+      const plainWriter = f => ({
+        width: s => f.font.widthOfTextAtSize(f.std ? safeStd(f.font, s) : s, e.size),
+        draw: (s, x, y) => page.drawText(f.std ? safeStd(f.font, s) : s, {x, y, size:e.size, font:f.font, color}) });
+      let writer = null;
+      const info = e.info;
+      const key = (r.kind === 'pdf' || r.kind === 'mix') ? pdfResourceName(page, info) : null;
+      if (r.kind === 'pdf' && key){
+        patchList.push([page, key, info]);
+        writer = { width: s => pdfWidth(info, pdfEncode(info, s) || [], e.size),
+                   draw: (s, x, y) => pdfDraw(page, key, info, pdfEncode(info, s) || [], x, y, e.size, color) };
+      } else if (r.kind === 'mix' && key){
+        const sub = await embedOf(r.sub) || await embedOf({kind:'std'});
+        const sw = plainWriter(sub);
+        patchList.push([page, key, info]);
+        const runW = rn => rn.o ? pdfWidth(info, pdfEncode(info, rn.s) || [], e.size) : sw.width(rn.s);
+        writer = {
+          width: s => (pdfRuns(info, s) || []).reduce((w, rn) => w + runW(rn), 0),
+          draw: (s, x, y) => { for (const rn of pdfRuns(info, s) || []){
+            if (rn.o) pdfDraw(page, key, info, pdfEncode(info, rn.s) || [], x, y, e.size, color); else sw.draw(rn.s, x, y);
+            x += runW(rn); } } };
+        if (sub.std) warnings.push('„' + text.slice(0, 40) + (text.length>40?'…':'') + '“: Originalschrift, nur fehlende Zeichen in ' + stdLabel(e));
+      } else if (r.kind === 'file' || r.kind === 'local' || r.kind === 'bundle'){
+        const f = await embedOf(r);
+        if (f) writer = plainWriter(f);
+      }
+      if (!writer){
+        writer = plainWriter(await embedOf({kind:'std'}));
+        if (info) warnings.push('„' + text.slice(0, 40) + (text.length>40?'…':'') + '“: Ersatzschrift ' + stdLabel(e) + ' statt ' + info.base);
+      }
+      if (e.type === 'para'){
+        const lines = wrapText(writer.width, text, e.w + 0.5);
+        if (lines.length > e.nOrig) warnings.push('Ein Absatz hat jetzt ' + lines.length + ' statt ' + e.nOrig + ' Zeilen und kann Text darunter überdecken.');
+        lines.forEach((ln, i) => { if (ln) writer.draw(ln, e.x, e.y - i*e.lead); });
+      } else {
+        writer.draw(text, e.x, e.y);
+      }
+    }
+    for (const [pg, key, info] of patchList) patchWidths(pg, key, info);
+    const out = await doc.save();
+    const blob = new Blob([out], {type:'application/pdf'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = S.name.replace(/\.pdf$/i, '') + '_bearbeitet.pdf';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+    status('Gespeichert als ' + a.download);
+    showModal(a.download, warnings);
+  } catch(err){
+    console.error(err);
+    status('Speichern fehlgeschlagen: ' + err.message);
+  }
+});
+
+function showModal(name, warnings){
+  $('mFile').textContent = 'Datei: ' + name + ' (im Download-Ordner)';
+  const ul = $('mWarn'); ul.innerHTML = '';
+  warnings.slice(0, 6).forEach(w => { const li = document.createElement('li'); li.textContent = w; ul.appendChild(li); });
+  ul.hidden = !warnings.length;
+  $('modal').hidden = false;
+  $('mClose').focus();
+}
+$('mClose').addEventListener('click', () => { $('modal').hidden = true; });
+$('modal').addEventListener('click', ev => { if (ev.target === $('modal')) $('modal').hidden = true; });
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape') $('modal').hidden = true; });
+window.__lz = S;
+})();
+</script>
+</body>
+</html>
