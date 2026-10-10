@@ -22,13 +22,17 @@ function create(){
     icon: path.join(__dirname, 'build', 'icon.png'),
     webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, spellcheck: false }
   });
-  // Installierte Schriften (Local Font Access) erlauben, alles andere nicht
+  // Installierte Schriften (Local Font Access) und Kopieren in die Zwischenablage (Fehlerbericht) erlauben, alles andere nicht
   const ses = session.defaultSession;
-  ses.setPermissionRequestHandler((wc, perm, cb) => cb(perm === 'local-fonts'));
-  ses.setPermissionCheckHandler((wc, perm) => perm === 'local-fonts');
+  const allowed = new Set(['local-fonts', 'clipboard-sanitized-write']);
+  ses.setPermissionRequestHandler((wc, perm, cb) => cb(allowed.has(perm)));
+  ses.setPermissionCheckHandler((wc, perm) => allowed.has(perm));
   // Speichern: Windows-Dialog „Speichern unter“ (Electron zeigt ihn automatisch)
   ses.on('will-download', (e, item) => {
-    item.setSaveDialogOptions({ title: 'Bearbeitetes PDF speichern', filters: [{ name: 'PDF', extensions: ['pdf'] }] });
+    const zip = /\.zip$/i.test(item.getFilename());
+    item.setSaveDialogOptions(zip
+      ? { title: 'Fehlerbericht speichern', filters: [{ name: 'ZIP-Archiv', extensions: ['zip'] }] }
+      : { title: 'Bearbeitetes PDF speichern', filters: [{ name: 'PDF', extensions: ['pdf'] }] });
   });
   // Links (Discord) im normalen Browser öffnen, nie in der App
   win.webContents.setWindowOpenHandler(({ url }) => { if (/^https?:/.test(url)) shell.openExternal(url); return { action: 'deny' }; });

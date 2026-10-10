@@ -4,7 +4,9 @@
 import os
 HERE = os.path.dirname(os.path.abspath(__file__))
 L = os.path.join(HERE, 'node_modules')
+VERSION = '2.4.0'   # auch in 05_Windows-App/package.json ändern
 t = open(os.path.join(HERE, 'editor-quelle.html'), encoding='utf-8').read()
+t = t.replace('/*VERSION*/', VERSION)
 esc = lambda s: s.replace('</script', '<\\/script')
 parts = {'PDFJS': 'pdfjs-dist/build/pdf.min.js', 'PDFLIB': 'pdf-lib/dist/pdf-lib.min.js',
          'FONTKIT': '@pdf-lib/fontkit/dist/fontkit.umd.min.js', 'WORKER': 'pdfjs-dist/build/pdf.worker.min.js'}
